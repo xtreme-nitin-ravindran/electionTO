@@ -140,7 +140,7 @@ body {
 /* Other races grid */
 .others {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 16px;
 }
 .other {
@@ -154,6 +154,11 @@ body {
 .other .candidate { grid-template-columns: 1fr 80px 60px; padding: 8px 10px; gap: 8px; }
 .other .candidate__name { font-size: 14px; }
 .other .candidate__votes, .other .candidate__pct { font-size: 13px; }
+
+.others { align-items: start; }
+.other > .race__badge { display: inline-block; margin-bottom: 14px; }
+.other .candidate { grid-template-columns: minmax(0, 1fr) auto auto; }
+.other .candidate__name { overflow-wrap: anywhere; }
 
 /* Footer */
 .site-footer {

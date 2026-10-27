@@ -202,10 +202,10 @@ function renderResults(data) {
   data.office.forEach((office) => {
     office.ward.forEach((ward) => {
       // Skip mayor city-wide, Councillor Ward 13, 4 and 14 (already shown above).
-      const isMayor = office.name === "Mayor" && ward.num === "0";
-      const isWard13 = office.name === "Councillor" && ward.num === "13";
-      const isWard4 = office.name === "Councillor" && ward.num === "4";
-      const isWard14 = office.name === "Councillor" && ward.num === "14";
+      const isMayor = office.name === "Mayor" && String(ward.num) === "0";
+      const isWard13 = office.name === "Councillor" && String(ward.num) === "13";
+      const isWard4 = office.name === "Councillor" && String(ward.num) === "4";
+      const isWard14 = office.name === "Councillor" && String(ward.num) === "14";
       if (isMayor || isWard13 || isWard4 || isWard14) return;
 
       const card = document.createElement("div");
@@ -233,7 +233,21 @@ function renderResults(data) {
       stat.style.fontSize = "12px";
       stat.textContent = statsLine(ward);
 
-      card.append(title, officeName, stat, badge);
+      const candidates = document.createElement("div");
+      candidates.className = "candidates";
+      const ranked = sortedCandidates(ward.candidate || []);
+      ranked.forEach((candidate, index) => {
+        const leading = hasResults(ward) && index === 0;
+        candidates.appendChild(candidateRow(candidate, ward, leading));
+      });
+      if (!ranked.length) {
+        const empty = document.createElement("p");
+        empty.className = "race__stats";
+        empty.textContent = "Candidate results have not been published yet.";
+        candidates.appendChild(empty);
+      }
+
+      card.append(title, officeName, stat, badge, candidates);
       others.appendChild(card);
     });
   });
