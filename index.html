@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toronto 2026 Municipal Election — Live Results</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Toronto 2026 Municipal Election</h1>
+      <p class="subtitle">Unofficial live results</p>
+      <p class="meta" id="meta-line">Loading…</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Mayor: front and center -->
+    <section id="mayor" class="race race--feature">
+      <div class="race__head">
+        <h2>Mayor</h2</h2>>
+        <span class="race__badge" id="mayor-badge"></span>
+      </div>
+      <div class="race__stats" id="mayor-stats"></div>
+      <div class="candidates" id="mayor-candidates"></div>
+    </section>
+
+    <!-- Ward 13: second most prominent -->
+    <section id="ward-13" class="race race--ward">
+      <div class="race__head">
+        <h2>Ward </h2>13 · Toronto Centre <span class="race__role">(Councillor)</span></h2>
+        <span class="race__badge" id="ward13-badge"></span>
+      </div>
+      <div class="race__stats" id="ward13-stats"></div>
+      <div class="candidates" id="ward13-candidates"></div>
+    </section>
+
+    <!-- Every other contest, collapsed under a grid -->
+    <section class="race race--more">
+      <h2>All Other Results</h2></h2>
+      <div id="others" class="others"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Data from</p> the City of Toronto unofficial results feed. Updates automatically.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
