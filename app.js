@@ -1,5 +1,4 @@
-const DATA_URL = "https://electionto-results.nitin-ravindran.workers.dev/";
-const BACKUP_URL = "results.json";
+const DATA_URL = "results.json";
 let hasLoadedResults = false;
 const expandedRaces = new Set();
 const PREVIEW_COUNT = 4;
@@ -7,11 +6,6 @@ const REFRESH_INTERVAL = 30 * 1000;
 let nextRefreshAt = Date.now() + REFRESH_INTERVAL;
 let isRefreshing = false;
 let refreshFailed = false;
-let lastCheckedAt = null;
-let lastFeedTimestamp = null;
-let receivedNewData = false;
-let lastResultsSignature = null;
-let usingBackup = false;
 
 function updateClock() {
   const now = new Date();
@@ -21,13 +15,9 @@ function updateClock() {
   document.getElementById("next-refresh").textContent = isRefreshing
     ? "Checking for updates…"
     : `Next results check in ${countdown}`;
-  const stale = lastFeedTimestamp && now.getTime() - new Date(lastFeedTimestamp).getTime() > 10 * 60 * 1000;
-  document.getElementById("last-check").textContent = lastCheckedAt
-    ? `Last checked ${new Date(lastCheckedAt).toLocaleTimeString("en-CA", { timeZone: "America/Toronto" })} · ${receivedNewData ? "New data received" : "No newer published data"}`
-    : "";
   document.getElementById("refresh-status").textContent = refreshFailed
     ? (hasLoadedResults ? "Refresh unavailable; showing last loaded results." : "Results unavailable; retrying automatically.")
-    : (usingBackup ? "Live feed unavailable; showing backup published results." : (stale ? "The City’s feed has not updated for over 10 minutes." : ""));
+    : "";
 }
 
 const nf = new Intl.NumberFormat("en-CA");
@@ -216,7 +206,7 @@ function renderStats(element, ward) {
 
 function renderResults(data) {
   const meta = document.getElementById("data-updated");
-  const updated = new Date(data.sourceUpdatedAt || data.fetchedAt);
+  const updated = new Date(data.fetchedAt);
   meta.textContent = `Data updated ${updated.toLocaleString("en-CA", { timeZone: "America/Toronto" })} Toronto time · ${data.electionDesc}`;
 
   const officeMap = new Map(data.office.map((o) => [o.name, o]));
@@ -326,33 +316,14 @@ function renderResults(data) {
   });
 }
 
-async function fetchResults(url) {
-  const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(20000) });
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  const data = await res.json();
-  if (!Array.isArray(data.office)) throw new Error("Invalid results feed");
-  return data;
-}
-
 async function load() {
   isRefreshing = true;
   updateClock();
   try {
-    let data;
-    try {
-      data = await fetchResults(DATA_URL);
-      usingBackup = false;
-    } catch (liveError) {
-      console.warn("Live feed unavailable; trying published backup", liveError);
-      data = await fetchResults(BACKUP_URL);
-      usingBackup = true;
-    }
+    const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(20000) });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
     renderResults(data);
-    const signature = JSON.stringify(data.office);
-    receivedNewData = signature !== lastResultsSignature;
-    lastResultsSignature = signature;
-    lastFeedTimestamp = data.sourceUpdatedAt || data.fetchedAt;
-    lastCheckedAt = Date.now();
     hasLoadedResults = true;
     refreshFailed = false;
   } catch (err) {
