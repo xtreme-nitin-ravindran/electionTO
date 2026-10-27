@@ -244,3 +244,6 @@ body {
   .ward-grid .candidate__bar { grid-column: 1; }
   .ward-grid .show-more { padding: 8px 3px; font-size: 11px; line-height: 1.3; }
 }
+
+.stat-value { display: inline-block; font-variant-numeric: tabular-nums; border-radius: 3px; }
+.candidate__votes, .candidate__pct { border-radius: 3px; }

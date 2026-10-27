@@ -34,6 +34,19 @@ function sortedCandidates(candidates) {
   );
 }
 
+// Highlight only displayed values that changed after the first render.
+function updateValue(element, text) {
+  const previous = element.textContent;
+  if (previous === text) return;
+  element.textContent = text;
+  if (!previous || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  element.getAnimations().forEach((animation) => animation.cancel());
+  element.animate([
+    { backgroundColor: "#c9e7ff", color: "#0849b5", transform: "translateY(-2px)" },
+    { backgroundColor: "transparent", color: "inherit", transform: "translateY(0)" }
+  ], { duration: 1000, easing: "ease-out" });
+}
+
 function candidateRow(candidate, ward, leading) {
   const row = document.createElement("div");
   row.className = "candidate" + (leading ? " candidate--lead" : "");
@@ -82,7 +95,9 @@ function animateList(list, buildRow) {
     const old = oldByName.get(row.dataset.name);
     if (!old) return row;
     old.className = row.className;
-    old.replaceChildren(...row.childNodes);
+    updateValue(old.querySelector(".candidate__votes"), row.querySelector(".candidate__votes").textContent);
+    updateValue(old.querySelector(".candidate__pct"), row.querySelector(".candidate__pct").textContent);
+    old.querySelector(".candidate__bar > span").style.width = row.querySelector(".candidate__bar > span").style.width;
     return old;
   });
 
@@ -152,15 +167,24 @@ function renderCandidateList(list, ward, key, label) {
   }
 }
 
-function statsLine(ward) {
+function renderStats(element, ward) {
   const received = parseInt(ward.pollsReceived, 10) || 0;
   const polls = parseInt(ward.polls, 10) || 0;
   const votes = parseInt(ward.votesReceived, 10) || 0;
   const voters = parseInt(ward.totalVoters, 10) || 0;
-  const counted = polls > 0 ? ((received / polls) * 100).toFixed(1) : "—";
-  const turnout = voters > 0 ? ((votes / voters) * 100).toFixed(1) : "—";
-
-  return `${nf.format(received)} of ${nf.format(polls)} polls reported · ${counted}% counted · ${turnout}% turnout`;
+  const counted = polls > 0 ? ((received / polls) * 100).toFixed(1) + "%" : "—";
+  const turnout = voters > 0 ? ((votes / voters) * 100).toFixed(1) + "%" : "—";
+  const values = [nf.format(received), nf.format(polls), counted, turnout];
+  const labels = [" of ", " polls reported · ", " counted · ", " turnout"];
+  if (!element.querySelector(".stat-value")) {
+    element.replaceChildren();
+    labels.forEach((label) => {
+      const value = document.createElement("span");
+      value.className = "stat-value";
+      element.append(value, document.createTextNode(label));
+    });
+  }
+  element.querySelectorAll(".stat-value").forEach((value, index) => updateValue(value, values[index]));
 }
 
 function renderResults(data) {
@@ -177,7 +201,7 @@ function renderResults(data) {
     ? "Live"
     : "Awaiting results";
   document.getElementById("mayor-badge").classList.toggle("is-live", hasResults(mayorWard));
-  document.getElementById("mayor-stats").textContent = statsLine(mayorWard);
+  renderStats(document.getElementById("mayor-stats"), mayorWard);
 
   renderCandidateList(document.getElementById("mayor-candidates"), mayorWard, "mayor", "Mayor");
 
@@ -188,7 +212,7 @@ function renderResults(data) {
     ? "Live"
     : "Awaiting results";
   document.getElementById("ward13-badge").classList.toggle("is-live", hasResults(ward13));
-  document.getElementById("ward13-stats").textContent = statsLine(ward13);
+  renderStats(document.getElementById("ward13-stats"), ward13);
 
   renderCandidateList(document.getElementById("ward13-candidates"), ward13, "councillor-13", "Ward 13");
 
@@ -198,7 +222,7 @@ function renderResults(data) {
     ? "Live"
     : "Awaiting results";
   document.getElementById("ward4-badge").classList.toggle("is-live", hasResults(ward4));
-  document.getElementById("ward4-stats").textContent = statsLine(ward4);
+  renderStats(document.getElementById("ward4-stats"), ward4);
 
   renderCandidateList(document.getElementById("ward4-candidates"), ward4, "councillor-4", "Ward 4");
 
@@ -208,13 +232,14 @@ function renderResults(data) {
     ? "Live"
     : "Awaiting results";
   document.getElementById("ward14-badge").classList.toggle("is-live", hasResults(ward14));
-  document.getElementById("ward14-stats").textContent = statsLine(ward14);
+  renderStats(document.getElementById("ward14-stats"), ward14);
 
   renderCandidateList(document.getElementById("ward14-candidates"), ward14, "councillor-14", "Ward 14");
 
   // --- Everything else ---
   const others = document.getElementById("others");
-  others.innerHTML = "";
+  const existingCards = new Map([...others.children].map((card) => [card.dataset.race, card]));
+  const activeCards = new Set();
 
   data.office.forEach((office) => {
     office.ward.forEach((ward) => {
@@ -225,8 +250,20 @@ function renderResults(data) {
       const isWard14 = office.name === "Councillor" && String(ward.num) === "14";
       if (isMayor || isWard13 || isWard4 || isWard14) return;
 
-      const card = document.createElement("div");
+      const key = `${office.id}-${ward.num}`;
+      let card = existingCards.get(key);
+      activeCards.add(key);
+      if (card) {
+        const badge = card.querySelector(".race__badge");
+        badge.textContent = hasResults(ward) ? "Live" : "Awaiting";
+        badge.classList.toggle("is-live", hasResults(ward));
+        renderStats(card.querySelector(".race__stats"), ward);
+        renderCandidateList(card.querySelector(".candidates"), ward, key, card.querySelector("h3").textContent);
+        return;
+      }
+      card = document.createElement("div");
       card.className = "other";
+      card.dataset.race = key;
 
       const title = document.createElement("h3");
       const label =
@@ -248,14 +285,17 @@ function renderResults(data) {
       stat.className = "race__stats";
       stat.style.margin = "0 0 10px";
       stat.style.fontSize = "12px";
-      stat.textContent = statsLine(ward);
+      renderStats(stat, ward);
 
       const candidates = document.createElement("div");
       candidates.className = "candidates";
       card.append(title, officeName, stat, badge, candidates);
       others.appendChild(card);
-      renderCandidateList(candidates, ward, `${office.id}-${ward.num}`, label);
+      renderCandidateList(candidates, ward, key, label);
     });
+  });
+  existingCards.forEach((card, key) => {
+    if (!activeCards.has(key)) card.remove();
   });
 }
 
