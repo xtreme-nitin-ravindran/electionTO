@@ -1,5 +1,7 @@
 const DATA_URL = "results.json";
 let hasLoadedResults = false;
+const expandedRaces = new Set();
+const PREVIEW_COUNT = 4;
 
 const nf = new Intl.NumberFormat("en-CA");
 
@@ -110,6 +112,46 @@ function animateList(list, buildRow) {
   });
 }
 
+// Each race keeps its expansion choice when fresh results arrive.
+function renderCandidateList(list, ward, key, label) {
+  const ranked = sortedCandidates(ward.candidate || []);
+  if (!list.id) list.id = `candidates-${encodeURIComponent(key)}`;
+  animateList(list, () => ranked.map((candidate, index) =>
+    candidateRow(candidate, ward, hasResults(ward) && index === 0)
+  ));
+
+  let button = list.nextElementSibling;
+  if (!button || !button.classList.contains("show-more")) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "show-more";
+    button.setAttribute("aria-controls", list.id);
+    list.after(button);
+  }
+  const update = () => {
+    const expanded = expandedRaces.has(key);
+    [...list.children].forEach((row, index) => {
+      row.hidden = !expanded && index >= PREVIEW_COUNT;
+    });
+    button.hidden = ranked.length <= PREVIEW_COUNT;
+    button.textContent = expanded ? "Show less" : `Show more (${ranked.length - PREVIEW_COUNT})`;
+    button.setAttribute("aria-expanded", String(expanded));
+    button.setAttribute("aria-label", `${expanded ? "Show fewer" : "Show all"} candidates for ${label}`);
+  };
+  button.onclick = () => {
+    if (expandedRaces.has(key)) expandedRaces.delete(key);
+    else expandedRaces.add(key);
+    update();
+  };
+  update();
+  if (!ranked.length) {
+    const empty = document.createElement("p");
+    empty.className = "race__stats";
+    empty.textContent = "Candidate results have not been published yet.";
+    list.appendChild(empty);
+  }
+}
+
 function statsLine(ward) {
   const received = parseInt(ward.pollsReceived, 10);
   const polls = parseInt(ward.polls, 10);
@@ -142,12 +184,7 @@ function renderResults(data) {
   document.getElementById("mayor-badge").classList.toggle("is-live", hasResults(mayorWard));
   document.getElementById("mayor-stats").textContent = statsLine(mayorWard);
 
-  const mayorCandidates = sortedCandidates(mayorWard.candidate);
-  const mayorTop = mayorCandidates[0];
-  const mayorList = document.getElementById("mayor-candidates");
-  animateList(mayorList, () =>
-    mayorCandidates.map((c) => candidateRow(c, mayorWard, c === mayorTop))
-  );
+  renderCandidateList(document.getElementById("mayor-candidates"), mayorWard, "mayor", "Mayor");
 
   // --- Ward 13 (Toronto Centre, Councillor) ---
   const councillor = officeMap.get("Councillor");
@@ -158,12 +195,7 @@ function renderResults(data) {
   document.getElementById("ward13-badge").classList.toggle("is-live", hasResults(ward13));
   document.getElementById("ward13-stats").textContent = statsLine(ward13);
 
-  const ward13Candidates = sortedCandidates(ward13.candidate);
-  const ward13Top = ward13Candidates[0];
-  const ward13List = document.getElementById("ward13-candidates");
-  animateList(ward13List, () =>
-    ward13Candidates.map((c) => candidateRow(c, ward13, c === ward13Top))
-  );
+  renderCandidateList(document.getElementById("ward13-candidates"), ward13, "councillor-13", "Ward 13");
 
   // --- Ward 4 (Parkdale-High Park, Councillor) ---
   const ward4 = councillor.ward.find((w) => String(w.num) === "4");
@@ -173,12 +205,7 @@ function renderResults(data) {
   document.getElementById("ward4-badge").classList.toggle("is-live", hasResults(ward4));
   document.getElementById("ward4-stats").textContent = statsLine(ward4);
 
-  const ward4Candidates = sortedCandidates(ward4.candidate);
-  const ward4Top = ward4Candidates[0];
-  const ward4List = document.getElementById("ward4-candidates");
-  animateList(ward4List, () =>
-    ward4Candidates.map((c) => candidateRow(c, ward4, c === ward4Top))
-  );
+  renderCandidateList(document.getElementById("ward4-candidates"), ward4, "councillor-4", "Ward 4");
 
   // --- Ward 14 (Toronto-Danforth, Councillor) ---
   const ward14 = councillor.ward.find((w) => String(w.num) === "14");
@@ -188,12 +215,7 @@ function renderResults(data) {
   document.getElementById("ward14-badge").classList.toggle("is-live", hasResults(ward14));
   document.getElementById("ward14-stats").textContent = statsLine(ward14);
 
-  const ward14Candidates = sortedCandidates(ward14.candidate);
-  const ward14Top = ward14Candidates[0];
-  const ward14List = document.getElementById("ward14-candidates");
-  animateList(ward14List, () =>
-    ward14Candidates.map((c) => candidateRow(c, ward14, c === ward14Top))
-  );
+  renderCandidateList(document.getElementById("ward14-candidates"), ward14, "councillor-14", "Ward 14");
 
   // --- Everything else ---
   const others = document.getElementById("others");
@@ -235,20 +257,9 @@ function renderResults(data) {
 
       const candidates = document.createElement("div");
       candidates.className = "candidates";
-      const ranked = sortedCandidates(ward.candidate || []);
-      ranked.forEach((candidate, index) => {
-        const leading = hasResults(ward) && index === 0;
-        candidates.appendChild(candidateRow(candidate, ward, leading));
-      });
-      if (!ranked.length) {
-        const empty = document.createElement("p");
-        empty.className = "race__stats";
-        empty.textContent = "Candidate results have not been published yet.";
-        candidates.appendChild(empty);
-      }
-
       card.append(title, officeName, stat, badge, candidates);
       others.appendChild(card);
+      renderCandidateList(candidates, ward, `${office.id}-${ward.num}`, label);
     });
   });
 }
