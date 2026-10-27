@@ -153,19 +153,14 @@ function renderCandidateList(list, ward, key, label) {
 }
 
 function statsLine(ward) {
-  const received = parseInt(ward.pollsReceived, 10);
-  const polls = parseInt(ward.polls, 10);
-  const votes = parseInt(ward.votesReceived, 10);
-  const voters = parseInt(ward.totalVoters, 10) || 1;
+  const received = parseInt(ward.pollsReceived, 10) || 0;
+  const polls = parseInt(ward.polls, 10) || 0;
+  const votes = parseInt(ward.votesReceived, 10) || 0;
+  const voters = parseInt(ward.totalVoters, 10) || 0;
+  const counted = polls > 0 ? ((received / polls) * 100).toFixed(1) : "—";
+  const turnout = voters > 0 ? ((votes / voters) * 100).toFixed(1) : "—";
 
-  let text = `${nf.format(polls)} polling locations`;
-  if (received > 0) {
-    const turnout = ((votes / voters) * 100).toFixed(1);
-    text += ` · ${nf.format(received)} reported · ${nf.format(votes)} votes · ${turnout}% turnout`;
-  } else {
-    text += " · results pending";
-  }
-  return text;
+  return `${nf.format(received)} of ${nf.format(polls)} polls reported · ${counted}% counted · ${turnout}% turnout`;
 }
 
 function renderResults(data) {
