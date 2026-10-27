@@ -57,6 +57,17 @@ body {
   padding: 26px;
 }
 
+/* Side-by-side ward columns */
+.ward-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.ward-grid .race { margin: 0; }
+@media (max-width: 720px) {
+  .ward-grid { grid-template-columns: 1fr; }
+}
+
 .race__head {
   display: flex;
   align-items: center;

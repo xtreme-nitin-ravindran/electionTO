@@ -165,16 +165,48 @@ function renderResults(data) {
     ward13Candidates.map((c) => candidateRow(c, ward13, c === ward13Top))
   );
 
+  // --- Ward 4 (Parkdale-High Park, Councillor) ---
+  const ward4 = councillor.ward.find((w) => String(w.num) === "4");
+  document.getElementById("ward4-badge").textContent = hasResults(ward4)
+    ? "Live"
+    : "Awaiting results";
+  document.getElementById("ward4-badge").classList.toggle("is-live", hasResults(ward4));
+  document.getElementById("ward4-stats").textContent = statsLine(ward4);
+
+  const ward4Candidates = sortedCandidates(ward4.candidate);
+  const ward4Top = ward4Candidates[0];
+  const ward4List = document.getElementById("ward4-candidates");
+  animateList(ward4List, () =>
+    ward4Candidates.map((c) => candidateRow(c, ward4, c === ward4Top))
+  );
+
+  // --- Ward 14 (Toronto-Danforth, Councillor) ---
+  const ward14 = councillor.ward.find((w) => String(w.num) === "14");
+  document.getElementById("ward14-badge").textContent = hasResults(ward14)
+    ? "Live"
+    : "Awaiting results";
+  document.getElementById("ward14-badge").classList.toggle("is-live", hasResults(ward14));
+  document.getElementById("ward14-stats").textContent = statsLine(ward14);
+
+  const ward14Candidates = sortedCandidates(ward14.candidate);
+  const ward14Top = ward14Candidates[0];
+  const ward14List = document.getElementById("ward14-candidates");
+  animateList(ward14List, () =>
+    ward14Candidates.map((c) => candidateRow(c, ward14, c === ward14Top))
+  );
+
   // --- Everything else ---
   const others = document.getElementById("others");
   others.innerHTML = "";
 
   data.office.forEach((office) => {
     office.ward.forEach((ward) => {
-      // Skip mayor city-wide and Councillor Ward 13 (already shown above).
+      // Skip mayor city-wide, Councillor Ward 13, 4 and 14 (already shown above).
       const isMayor = office.name === "Mayor" && ward.num === "0";
       const isWard13 = office.name === "Councillor" && ward.num === "13";
-      if (isMayor || isWard13) return;
+      const isWard4 = office.name === "Councillor" && ward.num === "4";
+      const isWard14 = office.name === "Councillor" && ward.num === "14";
+      if (isMayor || isWard13 || isWard4 || isWard14) return;
 
       const card = document.createElement("div");
       card.className = "other";
