@@ -64,9 +64,6 @@ body {
   gap: 24px;
 }
 .ward-grid .race { margin: 0; }
-@media (max-width: 900px) {
-  .ward-grid { grid-template-columns: 1fr; }
-}
 
 .race__head {
   display: flex;
@@ -203,7 +200,7 @@ body {
   .site-header { padding: 24px 0; }
   .site-header h1 { font-size: 25px; line-height: 1.2; }
   .race, .race--feature, .race--ward, .ward-grid .race { padding: 16px; margin: 16px 0; }
-  .ward-grid { gap: 16px; }
+  .ward-grid { gap: 8px; }
   .ward-grid .race { margin: 0; }
   .race--more { padding: 0; border: 0; background: transparent; box-shadow: none; }
   .race--more > h2 { font-size: 22px; margin: 24px 0 12px; }
@@ -218,4 +215,32 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .candidate, .candidate__bar > span { animation: none; transition: none; }
+}
+
+/* Keep the three featured wards together, including on narrow phones. */
+@media (max-width: 900px) {
+  .ward-grid { gap: 12px; }
+  .ward-grid .race { padding: 12px; }
+  .ward-grid .race h2 { font-size: 18px; }
+  .ward-grid .candidate { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; padding: 8px; }
+  .ward-grid .candidate__name { grid-column: 1 / -1; }
+  .ward-grid .candidate__votes { grid-column: 1; text-align: left; }
+  .ward-grid .candidate__pct { grid-column: 2; }
+}
+@media (max-width: 600px) {
+  .ward-grid { gap: 6px; }
+  .ward-grid .race { padding: 7px; border-radius: 9px; }
+  .ward-grid .race__head { display: block; margin-bottom: 8px; }
+  .ward-grid .race h2 { min-height: 88px; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+  .ward-grid .race__role { display: block; margin: 4px 0 0; font-size: 11px; }
+  .ward-grid .race__badge { display: inline-block; padding: 3px 5px; font-size: 11px; }
+  .ward-grid .race__stats { min-height: 115px; margin-bottom: 8px; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+  .ward-grid .candidates { gap: 6px; }
+  .ward-grid .candidate { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 6px; min-height: 112px; }
+  .ward-grid .candidate__name { grid-column: 1; min-height: 42px; font-size: 11px; line-height: 1.3; }
+  .ward-grid .candidate__votes { grid-column: 1; font-size: 12px; white-space: nowrap; }
+  .ward-grid .candidate__votes::after { content: none; }
+  .ward-grid .candidate__pct { grid-column: 1; text-align: left; font-size: 11px; }
+  .ward-grid .candidate__bar { grid-column: 1; }
+  .ward-grid .show-more { padding: 8px 3px; font-size: 11px; line-height: 1.3; }
 }
