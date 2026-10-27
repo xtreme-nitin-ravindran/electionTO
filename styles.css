@@ -247,3 +247,9 @@ body {
 
 .stat-value { display: inline-block; font-variant-numeric: tabular-nums; border-radius: 3px; }
 .candidate__votes, .candidate__pct { border-radius: 3px; }
+
+.meta { opacity: 0.9; }
+.meta p { margin: 6px 0 0; }
+.refresh-info { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+#next-refresh { color: #c7e1ff; }
+#refresh-status:empty { display: none; }

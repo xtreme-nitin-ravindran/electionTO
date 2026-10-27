@@ -4,14 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Toronto 2026 Municipal Election — Live Results</title>
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
   <header class="site-header">
     <div class="container">
       <h1>Toronto 2026 Municipal Election</h1>
       <p class="subtitle">Unofficial live results</p>
-      <p class="meta" id="meta-line">Loading…</p>
+      <div class="meta" id="meta-line">
+        <p id="data-updated">Loading…</p>
+        <div class="refresh-info">
+          <span id="current-time"></span>
+          <span id="next-refresh"></span>
+        </div>
+        <p id="refresh-status" role="status"></p>
+      </div>
     </div>
   </header>
 
@@ -69,6 +76,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

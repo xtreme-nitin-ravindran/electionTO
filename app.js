@@ -2,6 +2,23 @@ const DATA_URL = "results.json";
 let hasLoadedResults = false;
 const expandedRaces = new Set();
 const PREVIEW_COUNT = 4;
+const REFRESH_INTERVAL = 30 * 1000;
+let nextRefreshAt = Date.now() + REFRESH_INTERVAL;
+let isRefreshing = false;
+let refreshFailed = false;
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById("current-time").textContent = `Current time ${now.toLocaleTimeString("en-CA", { timeZone: "America/Toronto" })} Toronto time`;
+  const remaining = Math.max(0, Math.ceil((nextRefreshAt - now.getTime()) / 1000));
+  const countdown = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+  document.getElementById("next-refresh").textContent = isRefreshing
+    ? "Checking for updates…"
+    : `Next results check in ${countdown}`;
+  document.getElementById("refresh-status").textContent = refreshFailed
+    ? (hasLoadedResults ? "Refresh unavailable; showing last loaded results." : "Results unavailable; retrying automatically.")
+    : "";
+}
 
 const nf = new Intl.NumberFormat("en-CA");
 
@@ -188,7 +205,7 @@ function renderStats(element, ward) {
 }
 
 function renderResults(data) {
-  const meta = document.getElementById("meta-line");
+  const meta = document.getElementById("data-updated");
   const updated = new Date(data.fetchedAt);
   meta.textContent = `Data updated ${updated.toLocaleString("en-CA", { timeZone: "America/Toronto" })} Toronto time · ${data.electionDesc}`;
 
@@ -300,15 +317,18 @@ function renderResults(data) {
 }
 
 async function load() {
+  isRefreshing = true;
+  updateClock();
   try {
-    const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(20000) });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     renderResults(data);
     hasLoadedResults = true;
+    refreshFailed = false;
   } catch (err) {
+    refreshFailed = true;
     if (hasLoadedResults) {
-      document.getElementById("meta-line").textContent += " · Refresh unavailable; showing last loaded results";
       console.error(err);
       return;
     }
@@ -319,8 +339,13 @@ async function load() {
     div.textContent = "Unable to load results. Please try again shortly.";
     mayor.appendChild(div);
     console.error(err);
+  } finally {
+    isRefreshing = false;
+    nextRefreshAt = Date.now() + REFRESH_INTERVAL;
+    updateClock();
+    setTimeout(load, REFRESH_INTERVAL);
   }
 }
 
 load();
-setInterval(load, 30 * 1000);
+setInterval(updateClock, 1000);
