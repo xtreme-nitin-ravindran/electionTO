@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Toronto 2026 Municipal Election — Live Results</title>
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <header class="site-header">
@@ -17,6 +17,7 @@
           <span id="current-time"></span>
           <span id="next-refresh"></span>
         </div>
+        <p id="last-check"></p>
         <p id="refresh-status" role="status"></p>
       </div>
     </div>
@@ -72,10 +73,10 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>Data from the City of Toronto unofficial results feed. Refreshes about every five minutes; updates may be delayed.</p>
+      <p>Data from the City of Toronto unofficial results feed. Checks the City’s feed every 30 seconds. Published backup data is used if the live feed is unavailable.</p>
     </div>
   </footer>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
