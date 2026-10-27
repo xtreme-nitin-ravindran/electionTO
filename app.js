@@ -1,4 +1,5 @@
-const DATA_URL = "https://mediaresults.toronto.ca/results/unofficialresult.json";
+const DATA_URL = "results.json";
+let hasLoadedResults = false;
 
 const nf = new Intl.NumberFormat("en-CA");
 
@@ -73,12 +74,14 @@ function animateList(list, buildRow) {
 
   // Build the new (sorted) set of rows.
   const newRows = buildRow();
-  const newByName = new Map(newRows.map((el) => [el.dataset.name, el]));
 
   // Reuse existing DOM nodes for candidates that remain, so CSS transitions work.
   const merged = newRows.map((row) => {
     const old = oldByName.get(row.dataset.name);
-    return old || row;
+    if (!old) return row;
+    old.className = row.className;
+    old.replaceChildren(...row.childNodes);
+    return old;
   });
 
   list.innerHTML = "";
@@ -125,8 +128,8 @@ function statsLine(ward) {
 
 function renderResults(data) {
   const meta = document.getElementById("meta-line");
-  const now = new Date();
-  meta.textContent = `Updated ${now.toLocaleTimeString()} · ${data.electionDesc}`;
+  const updated = new Date(data.fetchedAt);
+  meta.textContent = `Data updated ${updated.toLocaleString("en-CA", { timeZone: "America/Toronto" })} Toronto time · ${data.electionDesc}`;
 
   const officeMap = new Map(data.office.map((o) => [o.name, o]));
 
@@ -148,7 +151,7 @@ function renderResults(data) {
 
   // --- Ward 13 (Toronto Centre, Councillor) ---
   const councillor = officeMap.get("Councillor");
-  const ward13 = councillor.ward.find((w) => w.num === "13");
+  const ward13 = councillor.ward.find((w) => String(w.num) === "13");
   document.getElementById("ward13-badge").textContent = hasResults(ward13)
     ? "Live"
     : "Awaiting results";
@@ -206,11 +209,17 @@ function renderResults(data) {
 
 async function load() {
   try {
-    const res = await fetch(DATA_URL);
+    const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     renderResults(data);
+    hasLoadedResults = true;
   } catch (err) {
+    if (hasLoadedResults) {
+      document.getElementById("meta-line").textContent += " · Refresh unavailable; showing last loaded results";
+      console.error(err);
+      return;
+    }
     const mayor = document.getElementById("mayor-candidates");
     mayor.innerHTML = "";
     const div = document.createElement("div");
