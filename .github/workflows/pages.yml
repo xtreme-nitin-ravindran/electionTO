@@ -30,7 +30,7 @@ jobs:
       - name: Prepare site and fetch current results
         run: |
           mkdir -p public
-          cp index.html app.js styles.css CNAME public/
+          cp index.html app.js styles.css CNAME LICENSE brand-spaghetti.jpg public/
           python scripts/fetch-results.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
